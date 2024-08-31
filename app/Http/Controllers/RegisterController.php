@@ -19,32 +19,36 @@ class RegisterController extends Controller
 
     public function register(Request $request)
     {
-        // dd($request->all());
+        // ตรวจสอบ username และ email ว่ามีในระบบแล้วหรือยัง
+        $existingUser = DB::table('users')
+            ->where('username', $request->username)
+            ->orWhere('email', $request->email)
+            ->first();
 
-        // Validating the input
-        // $request->validate([
-        //     'first_name' => 'required|string|max:255',
-        //     'last_name' => 'required|string|max:255',
-        //     'username' => 'required|string|unique:users|max:255',
-        //     'email' => 'required|email|unique:users|max:255',
-        //     'sector' => 'required|exists:sectors,id',
-        //     'password' => 'required|string|min:6|confirmed',
-        // ]);
+        if ($existingUser) {
+            // หากมี username หรือ email ซ้ำกัน ให้ทำการแจ้งเตือน
+            return redirect()->back()->withInput($request->only('first_name', 'last_name', 'username', 'email', 'sector'))->with('error', 'ชื่อผู้ใช้งานหรืออีเมลนี้มีในระบบแล้ว กรุณาลองใหม่');
+        }
 
-        // Insert the user into the database
+
         $user = DB::table('users')->insertGetId([
             'firstname' => $request->first_name,
             'lastname' => $request->last_name,
             'username' => $request->username,
             'email' => $request->email,
-            'sector' => 1,
+            'sector' => $request->sector,
+            'status' => null,
+            'email_verified_at' => now(),
+            'updated_by' => 'system',
+            'updated_at' => now(),
+            'created_by' => 'system',
+            'created_at' => now(),
             'password' => Hash::make($request->password),
         ]);
 
-        // Log the user in
-        Auth::loginUsingId($user);
+        session()->flash('status', 'success');
+        session()->flash('message', 'คำร้องการสมัครถูกส่งแล้ว กรุณารอเจ้าหน้าที่อนุมัติ');
 
-        // Redirect to intended route
-        return redirect()->intended('/dashboard');
+        return redirect('/login');
     }
 }

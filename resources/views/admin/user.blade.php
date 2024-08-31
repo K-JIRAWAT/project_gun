@@ -5,10 +5,21 @@
         <div class="card">
             <div class="card-body">
                 <div class="row mb-3">
-                    <div class="mb-3 text-end">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">เพิ่มผู้ใช้งาน</button>
+                    @if(Auth::user()->role_id == 1)
+                        <div class="mb-3 text-end">
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">เพิ่มผู้ใช้งาน</button>
+                        </div>
+                    @endif
+                    <div class="col-md-1">
+                        <select id="row_num" class="form-select">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
                     </div>
-                    <div class="col-md-8">
+                    <div class="col-md-7">
                         <input type="text" id="searchInput" class="form-control" placeholder="ค้นหา...">
                     </div>
                     <div class="col-md-4">
@@ -32,13 +43,18 @@
                             <th>หน่วยงาน</th>
                             <th>สิทธิ์การใช้งาน</th>
                             <th>แก้ไขล่าสุด</th>
+                            @if(Auth::user()->role_id == 1)
                             <th></th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody id="userTableBody">
                     
                     </tbody>
                 </table>
+                <nav aria-label="Page navigation" style="float: left">
+                    <ul class="pagination" id="paginationLinks"></ul>
+                </nav>
             </div>
         </div>
     </div>
@@ -150,6 +166,7 @@
     </div>
 
     <script>
+        var userRoleId = @json(Auth::user()->role_id);
         $(document).ready(function() {
             search(); 
             $('#searchInput').on('keyup', function() {
@@ -159,11 +176,22 @@
             $('#roleFilter').on('change', function() {
                 search(); 
             });
+
+            $('#row_num').on('change', function() {
+                search(); 
+            });
         });
 
-        function search() {
+        $(document).on('click', '.page-link', function(event) {
+            event.preventDefault();
+            var page = $(this).text(); 
+            search(page);
+        });
+
+        function search(page = 1) {
             var searchInput = $('#searchInput').val();
             var rolesInput = $('#roleFilter').val();
+            var row_num = $('#row_num').val();
 
             $.ajax({
                 url: '{{ route("user.search") }}',
@@ -171,14 +199,20 @@
                 data: {
                     _token: '{{ csrf_token() }}',
                     search: searchInput,
-                    role: rolesInput 
+                    role: rolesInput,
+                    page: page,
+                    row_num: row_num
                 },
                 success: function(response) {
-                    var users = response.user;
+                    var users = response.user.data;
                     var html = '';
 
                     if (users.length === 0) {
-                        html += '<tr><td colspan="6" class="text-center">ไม่พบข้อมูล</td></tr>';
+                        if(userRoleId == 1){
+                            html += '<tr><td colspan="6" class="text-center">ไม่พบข้อมูล</td></tr>';
+                        }else{
+                            html += '<tr><td colspan="5" class="text-center">ไม่พบข้อมูล</td></tr>';
+                        }
                     } else {
                         users.forEach(function(user) {
                             html += '<tr>';
@@ -190,21 +224,48 @@
                             html += '<td>' + user.sector_name + '</td>';
                             html += '<td>' + user.role_name + '</td>';
                             html += '<td>' + user.updated_at + '</td>';
-                            html += '<td>';
-                            html += '<button class="btn btn-sm btn-warning" onclick="editUser(' + user.id + ')">แก้ไข</button> ';
-                            html += '<button class="btn btn-sm btn-danger" onclick="deleteUser(' + user.id + ')">ลบ</button>';
-                            html += '</td>';
+                            if(userRoleId == 1){
+                                html += '<td>';
+                                html += '<button class="btn btn-sm btn-warning" onclick="editUser(' + user.id + ')"><i class="bi bi-pen"></i></button> ';
+                                html += '<button class="btn btn-sm btn-danger" onclick="deleteUser(' + user.id + ')"><i class="bi bi-trash"></i></button>';
+                                html += '</td>';
+                            }
                             html += '</tr>';
                         });
                     }
 
                     $('#userTableBody').html(html);
+
+                    var paginationHtml = '';
+
+                    if (response.user.links) { // ใช้ response.user.links แทน
+                        console.log(response.user.links); // Log links for debugging
+                        response.user.links.forEach(function(link) {
+                            // แสดงเฉพาะปุ่มหมายเลขหน้า ไม่รวมปุ่ม Previous และ Next
+                            if (link.url && link.label !== '&laquo; Previous' && link.label !== 'Next &raquo;') {
+                                var pageNum = getPageFromUrl(link.url);
+                                paginationHtml += '<li class="page-item ' + (link.active ? 'active' : '') + '">';
+                                paginationHtml += '<a class="page-link" href="#" onclick="search(' + pageNum + '); return false;">' + link.label + '</a>';
+                                paginationHtml += '</li>';
+                            }
+                        });
+                    }
+
+                    $('#paginationLinks').html(paginationHtml);
+
                 },
                 error: function(xhr, status, error) {
                     console.error(error);
                 }
             });
         }
+
+        
+        function getPageFromUrl(url) {
+            var urlParams = new URLSearchParams(new URL(url).search);
+            return urlParams.get('page');
+        }
+
 
         function addUser() {
             $.ajax({
@@ -232,7 +293,7 @@
                     Swal.fire({
                         icon: 'error',
                         title: 'เกิดข้อผิดพลาด!',
-                        text: 'การเพิ่มไม่สำเร็จ',
+                        text: 'Email นี้ถูกใช้งานแล้ว',
                     });
                 }
             });

@@ -1,14 +1,26 @@
 @extends('layout.admin')
 @section('body')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
     <div class="container mt-4">
         <div class="card">
             <div class="card-body">
-                <div class="mb-3 text-end">
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">เพิ่มข้อมูล</button>
-                </div>
+                @if(Auth::user()->role_id == 1)
+                    <div class="mb-3 text-end">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">เพิ่มข้อมูล</button>
+                    </div>
+                @endif
                 <div class="row mb-3">
-                    <div class="col-md-8">
+                    <div class="col-md-1">
+                        <select id="row_num" class="form-select">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div class="col-md-7">
                         <input type="text" id="searchInput" class="form-control" placeholder="ค้นหา...">
                     </div>
                     <div class="col-md-4">
@@ -27,18 +39,22 @@
                             <th>ID</th>
                             <th>รูป</th>
                             <th>ชื่อ</th>
-                            <th>code</th>
+                            {{-- <th>code</th> --}}
                             <th>stock</th>
                             <th>ประเภท</th>
                             <th>แก้ไขล่าสุด</th>
-                            <th></th>
+                            @if(Auth::user()->role_id == 1)
+                                <th></th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody id="itemTableBody">
                     
                     </tbody>
                 </table>
-                <div id="pagination"></div>
+                <nav aria-label="Page navigation" style="float: left">
+                    <ul class="pagination" id="paginationLinks"></ul>
+                </nav>
             </div>
         </div>
     </div>
@@ -56,14 +72,14 @@
                     <form id="addItemForm" enctype="multipart/form-data">
                         @csrf
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label for="name" class="form-label">ชื่อ</label>
                                 <input type="text" class="form-control" id="name" name="name" required>
                             </div>
-                            <div class="col-md-6">
+                            {{-- <div class="col-md-6">
                                 <label for="code" class="form-label">Code</label>
                                 <input type="text" class="form-control" id="code" name="code" required>
-                            </div>
+                            </div> --}}
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
@@ -82,7 +98,7 @@
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <label for="image" class="form-label">รูป</label>
-                                <input type="file" class="form-control" id="image" name="image" required disabled>
+                                <input type="file" class="form-control" id="image" name="image">
                             </div>
                         </div>
                     </form>
@@ -109,14 +125,14 @@
                     <form id="editUserForm">
                         <input type="hidden" id="edititemId">
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label for="editname" class="form-label">ชื่อ</label>
                                 <input type="text" class="form-control" id="editname" required>
                             </div>
-                            <div class="col-md-6">
+                            {{-- <div class="col-md-6">
                                 <label for="editcode" class="form-label">code</label>
                                 <input type="text" class="form-control" id="editcode" required>
-                            </div>
+                            </div> --}}
                         </div>
                         
                         <div class="row mb-3">
@@ -133,6 +149,12 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="image" class="form-label">รูป</label>
+                                <input type="file" class="form-control" id="edit_image" name="edit_image">
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -144,6 +166,7 @@
     </div>
 
     <script>
+        var userRoleId = @json(Auth::user()->role_id);
         $(document).ready(function() {
             search(); 
             $('#searchInput').on('keyup', function() {
@@ -153,106 +176,96 @@
             $('#roleFilter').on('change', function() {
                 search(); 
             });
+
+            $('#row_num').on('change', function() {
+                search(); 
+            });
         });
 
-        function search() {
-            var searchInput = $('#searchInput').val();
-            var rolesInput = $('#roleFilter').val();
-
-            $.ajax({
-                url: '{{ route("item.search") }}',
-                type: 'POST', 
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    search: searchInput,
-                    type: rolesInput 
-                },
-                success: function(response) {
-                    var items = response.item;
-                    var html = '';
-                    var image_url = '/image/soldier5.jpg';
-                    if (items.length === 0) {
-                        html += '<tr><td colspan="8" class="text-center">ไม่พบข้อมูล</td></tr>';
-                    } else {
-                        items.forEach(function(item) {
-                            var itemImage = item.images ? item.images : image_url; // Use placeholder image if item.images is empty
-                            html += '<tr>';
-                            html += '<td>' + item.id + '</td>';
-                            html += '<td><img src="' + itemImage + '" alt="Item Image" class="item-image"></td>';
-                            html += '<td>' + item.name + '</td>';
-                            html += '<td>' + item.code + '</td>';
-                            html += '<td>' + item.stock + '</td>';
-                            html += '<td>' + item.type_name + '</td>';
-                            html += '<td>' + item.updated_at + '</td>';
-                            html += '<td>';
-                            html += '<button class="btn btn-sm btn-warning" onclick="editItem(' + item.id + ')">แก้ไข</button> ';
-                            html += '<button class="btn btn-sm btn-danger" onclick="deleteItem(' + item.id + ')">ลบ</button>';
-                            html += '</td>';
-                            html += '</tr>';
-                        });
-                    }
-
-                    $('#itemTableBody').html(html);
-                },
-                error: function(xhr, status, error) {
-                    console.error(error);
-                }
+            $(document).on('click', '.page-link', function(event) {
+                event.preventDefault();
+                var page = $(this).text(); 
+                search(page);
             });
+
+
+            function search(page = 1) {
+                var searchInput = $('#searchInput').val();
+                var rolesInput = $('#roleFilter').val();
+                var row_num = $('#row_num').val();
+
+                $.ajax({
+                    url: '{{ route("item.search") }}',
+                    type: 'POST', 
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        search: searchInput,
+                        type: rolesInput,
+                        page: page,
+                        row_num: row_num
+                    },
+                    success: function(response) {
+                        var items = response.item.data; // Get paginated data
+                        var html = '';
+                        var image_url = '/image/soldier5.jpg';
+                        
+                        if (items.length === 0) {
+                            if(userRoleId == 1){
+                                html += '<tr><td colspan="8" class="text-center">ไม่พบข้อมูล</td></tr>';
+                            }else{
+                                html += '<tr><td colspan="7" class="text-center">ไม่พบข้อมูล</td></tr>';
+                            }
+                        } else {
+                            items.forEach(function(item) {
+                                var itemImage = item.images ? item.images : image_url;
+                                html += '<tr>';
+                                html += '<td>' + item.id + '</td>';
+                                html += '<td><img src="' + itemImage + '" alt="Item Image" class="item-image"></td>';
+                                html += '<td>' + item.name + '</td>';
+                                // html += '<td>' + item.code + '</td>';
+                                html += '<td>' + item.stock + '</td>';
+                                html += '<td>' + item.type_name + '</td>';
+                                html += '<td>' + item.updated_at + '</td>';
+                                if(userRoleId == 1){
+                                    html += '<td>';
+                                    html += '<button class="btn btn-sm btn-warning" onclick="editItem(' + item.id + ')"><i class="bi bi-pen"></i></button> ';
+                                    html += '<button class="btn btn-sm btn-danger" onclick="deleteItem(' + item.id + ')"><i class="bi bi-trash"></i></button>';
+                                    html += '</td>';
+                                }
+                                html += '</tr>';
+                            });
+                        }
+
+                        $('#itemTableBody').html(html);
+
+                        // Generate pagination links
+                        var paginationHtml = '';
+
+                        if (response.item.links) {
+                            console.log(response.item.links); // Log links for debugging
+                            response.item.links.forEach(function(link) {
+                                // แสดงเฉพาะปุ่มหมายเลขหน้า ไม่รวมปุ่ม Previous และ Next
+                                if (link.url && link.label !== '&laquo; Previous' && link.label !== 'Next &raquo;') {
+                                    var pageNum = getPageFromUrl(link.url);
+                                    paginationHtml += '<li class="page-item ' + (link.active ? 'active' : '') + '">';
+                                    paginationHtml += '<a class="page-link" href="#" onclick="search(' + pageNum + '); return false;">' + link.label + '</a>';
+                                    paginationHtml += '</li>';
+                                }
+                            });
+                        }
+
+                        $('#paginationLinks').html(paginationHtml);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(error); // Debugging: Log the error
+                    }
+                });
+            }
+
+        function getPageFromUrl(url) {
+            var urlParams = new URLSearchParams(new URL(url).search);
+            return urlParams.get('page');
         }
-
-        // function search(page = 1) {
-        //     var searchInput = $('#searchInput').val();
-        //     var rolesInput = $('#roleFilter').val();
-        //     var perPage = 10; // Number of items per page
-
-        //     $.ajax({
-        //         url: '{{ route("item.search") }}',
-        //         type: 'POST',
-        //         data: {
-        //             _token: '{{ csrf_token() }}',
-        //             search: searchInput,
-        //             type: rolesInput,
-        //             page: page,
-        //             perPage: perPage
-        //         },
-        //         success: function(response) {
-        //             var items = response.data; // 'data' contains the paginated items
-        //             var html = '';
-        //             console.log(response.last_page);
-        //             if (items.length === 0) {
-        //                 html += '<tr><td colspan="8" class="text-center">ไม่พบข้อมูล</td></tr>';
-        //             } else {
-        //                 items.forEach(function(item) {
-        //                     html += '<tr>';
-        //                     html += '<td>' + item.id + '</td>';
-        //                     html += '<td><img src="' + item.images + '" alt="Item Image" class="item-image"></td>';
-        //                     html += '<td>' + item.name + '</td>';
-        //                     html += '<td>' + item.code + '</td>';
-        //                     html += '<td>' + item.stock + '</td>';
-        //                     html += '<td>' + item.type_name + '</td>';
-        //                     html += '<td>' + item.updated_at + '</td>';
-        //                     html += '<td>';
-        //                     html += '<button class="btn btn-sm btn-warning" onclick="editItem(' + item.id + ')">แก้ไข</button> ';
-        //                     html += '<button class="btn btn-sm btn-danger" onclick="deleteItem(' + item.id + ')">ลบ</button>';
-        //                     html += '</td>';
-        //                     html += '</tr>';
-        //                 });
-        //             }
-
-        //             $('#itemTableBody').html(html);
-
-        //             // Handle pagination links
-        //             var paginationHtml = '';
-        //             for (var i = 1; i <= response.last_page; i++) {
-        //                 paginationHtml += '<a href="#" class="page-link" onclick="search(' + i + ')">' + i + '</a> ';
-        //             }
-        //             $('#pagination').html(paginationHtml);
-        //         },
-        //         error: function(xhr, status, error) {
-        //             console.error(error);
-        //         }
-        //     });
-        // }
 
 
         function editItem(itemId) {
@@ -266,7 +279,7 @@
                     var item = response.item;
                     $('#edititemId').val(item.id);
                     $('#editname').val(item.name);
-                    $('#editcode').val(item.code);
+                    // $('#editcode').val(item.code);
                     $('#edittype').val(item.type);
                     $('#editstock').val(item.stock);
                     $('#edititemModal').modal('show');
@@ -278,14 +291,21 @@
         }
 
         function addItem() {
-            var formData = new FormData(document.getElementById('addItemForm'));
+            var formData = new FormData();
+            formData.append('name', $('#name').val());
+            formData.append('stock', $('#stock').val());
+            formData.append('type', $('#type').val());
+            formData.append('image', $('#image')[0].files[0]); // เพิ่มรูปภาพ
 
             $.ajax({
                 url: '{{ route("item.add") }}',
                 type: 'POST',
                 data: formData,
-                contentType: false,
-                processData: false,
+                contentType: false,  // ตั้งค่าเป็น false เมื่อใช้ FormData
+                processData: false,  // ตั้งค่าเป็น false เมื่อใช้ FormData
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
                 success: function(response) {
                     $('#addItemModal').modal('hide');
                     Swal.fire({
@@ -293,8 +313,8 @@
                         title: 'เพิ่มข้อมูลสำเร็จ',
                     });
                     document.getElementById('addItemForm').reset();
-                    // search(); // Refresh the item list
-                    location.reload(); // Refresh the entire page
+                    search(); // Refresh the item list
+                    // location.reload();
                 },
                 error: function(xhr, status, error) {
                     console.error(error);
@@ -308,16 +328,20 @@
         }
 
         function saveItem() {
+            var formData = new FormData();
+            formData.append('name', $('#editname').val());
+            formData.append('stock', $('#editstock').val());
+            formData.append('type', $('#edittype').val());
+            formData.append('itemId', $('#edititemId').val());
+            formData.append('image', $('#edit_image')[0].files[0]); // เพิ่มรูปภาพ
             $.ajax({
                 url: '{{ route("item.save") }}',
                 type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    name: $('#editname').val(),
-                    code: $('#editcode').val(),
-                    stock: $('#editstock').val(),
-                    type: $('#edittype').val(),
-                    itemId: $('#edititemId').val()
+                data: formData,
+                contentType: false,  // ตั้งค่าเป็น false เมื่อใช้ FormData
+                processData: false,  // ตั้งค่าเป็น false เมื่อใช้ FormData
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(response) {
                     $('#editItemModal').modal('hide');
@@ -359,7 +383,7 @@
                         success: function(response) {
                             Swal.fire({
                                 icon: 'success',
-                                title: 'ลบผู้ใช้งานเรียบร้อยแล้ว',
+                                title: 'ลบเรียบร้อยแล้ว',
                                 showConfirmButton: false,
                                 timer: 1500
                             });
@@ -370,7 +394,7 @@
                             Swal.fire({
                                 icon: 'error',
                                 title: 'เกิดข้อผิดพลาด',
-                                text: 'ไม่สามารถลบผู้ใช้งานได้'
+                                text: 'ไม่สามารถลบได้'
                             });
                         }
                     });
@@ -382,10 +406,35 @@
 
     <style>
         .item-image {
-            width: 50px;
+            width: 50px; /* ขนาดปกติของรูปภาพ */
             height: 50px;
             border-radius: 5px;
             object-fit: cover;
+            transition: all 0.3s ease; /* Smooth transition */
+        }
+
+        .table-hover tbody tr:hover .item-image {
+            cursor: pointer; /* แสดง cursor เป็น pointer เมื่อ hover */
+        }
+
+        .table-hover tbody tr:hover .item-image {
+            width: 100px; /* ขยายขนาดรูปเมื่อ hover ที่แถว */
+            height: 100px;
+        }
+
+        .table-hover tbody tr .item-image:hover {
+            width: 100%; /* ขยายขนาดรูปเป็น 100% เมื่อ hover ที่รูป */
+            height: 100%; /* ทำให้ความสูงเป็นอัตโนมัติ */
+            z-index: 1; /* ให้รูปที่ขยายอยู่ด้านบน */
+            cursor: pointer; /* แสดง cursor เป็น pointer เมื่อ hover */
+        }
+
+        .table-hover tbody tr {
+            position: relative; /* ทำให้ parent element เป็น relative */
+        }
+
+        .table-hover tbody tr .item-image {
+            transition: all 0.3s ease; /* Smooth transition */
         }
     </style>
 @endsection

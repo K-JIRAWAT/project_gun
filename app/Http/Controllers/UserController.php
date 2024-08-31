@@ -20,7 +20,7 @@ class UserController extends Controller
     public function search(Request $request)
     {
 
-        $data['user'] = DB::table('users')
+        $query = DB::table('users')
             ->leftJoin('roles', 'users.role_id', '=', 'roles.id')
             ->leftJoin('sectors', 'users.sector', '=', 'sectors.id')
             ->when($request->input('search'), function ($query, $search) {
@@ -35,8 +35,11 @@ class UserController extends Controller
                 return $query->where('roles.id', $role);
             })
             ->whereNull('users.deleted_at')
-            ->select('users.*', 'roles.name as role_name', 'sectors.name as sector_name') // เลือกคอลัมน์ที่ต้องการ
-            ->get();
+            ->where('users.status', 1)
+            ->select('users.*', 'roles.name as role_name', 'sectors.name as sector_name');
+
+
+        $data['user'] = $query->paginate($request->row_num); // Use paginate instead of get()
 
         return response()->json($data);
     }
@@ -84,6 +87,18 @@ class UserController extends Controller
         $email = $request->input('email');
         $role = $request->input('role');
         $password = Hash::make($request->input('password'));
+
+        // ตรวจสอบว่ามีอีเมลที่ซ้ำกันอยู่หรือไม่
+        $exists = DB::table('users')
+            ->where('email', $email)
+            ->where('deleted_at', null)
+            ->exists();
+
+        if ($exists) {
+            // ส่งกลับข้อผิดพลาดหากอีเมลซ้ำ
+            return response()->json(['error' => 'Email already exists'], 400);
+        }
+
 
         DB::table('users')
             ->insert([

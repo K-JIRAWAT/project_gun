@@ -11,19 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('firearms', function (Blueprint $table) {
+        Schema::create('log_borrow', function (Blueprint $table) {
             $table->id();
-            $table->string('images')->nullable();
-            $table->string('name');
-            $table->string('code')->nullable();
-            $table->bigInteger('type');
-            $table->bigInteger('stock');
+            $table->string('request_no');
+            $table->bigInteger('status')->nullable();
+            $table->string('remarks')->nullable();
             $table->string('created_by', 100)->nullable();
-            $table->timestamp('created_at')->nullable();
             $table->string('updated_by', 100)->nullable();
-            $table->timestamp('updated_at')->nullable();
             $table->string('deleted_by', 100)->nullable();
             $table->timestamp('deleted_at')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -32,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('firearms');
+        Schema::dropIfExists('log_borrow');
     }
 };

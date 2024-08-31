@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
         $this->call(FirearmsSeeder::class);
         $this->call(RolesSeeder::class);
         $this->call(SectorsSeeder::class);
+        $this->call(StatusTableSeeder::class);
 
     }
 }

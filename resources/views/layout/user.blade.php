@@ -90,22 +90,16 @@
         
         <hr>
         <ul class="nav nav-pills flex-column mb-auto">
-            <li class="nav-item">
-                <a class="nav-link {{ Request::is('dashboard') ? 'active' : '' }}" href="{{ url('/admin/dashboard') }}">
-                    <i class="bi bi-speedometer"></i>
-                    <span>Dashboard</span>
+            <li>
+                <a class="nav-link {{ Request::is('user/home') ? 'active' : '' }}" href="{{ url('/user/home') }}">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>สร้างแบบฟอร์ม</span>
                 </a>
             </li>
             <li>
-                <a class="nav-link {{ Request::is('admin/user') ? 'active' : '' }}" href="{{ url('/admin/user') }}">
-                    <i class="bi bi-person-fill"></i>
-                    <span>ตั้งค่าผู้ใช้งาน</span>
-                </a>
-            </li>
-            <li>
-                <a class="nav-link {{ Request::is('admin/item') ? 'active' : '' }}" href="{{ url('/admin/item') }}">
-                    <i class="bi bi-gear-fill"></i>
-                    <span>ตั้งค่ายุทโธปกรณ์</span>
+                <a class="nav-link {{ Request::is('user/list') ? 'active' : '' }}" href="{{ url('/user/list') }}">
+                    <i class="bi bi-folder-fill"></i>
+                    <span>คำร้องของท่าน</span>
                 </a>
             </li>
             <li>

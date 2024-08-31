@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('images')->nullable();
             $table->bigInteger('sector')->nullable();
             $table->bigInteger('status')->nullable();
-            $table->string('email')->unique();
+            $table->string('email')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('created_by', 100)->nullable();

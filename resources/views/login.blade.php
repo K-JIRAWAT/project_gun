@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.27/dist/sweetalert2.min.css">
     <style>
         body {
-            background-color: #222223;
+            background-color: #e3f2fd;
             /* background-image: url('/image/soldier2.jpg'); */
             background-size: cover;
             /* background-position: center;  */
@@ -30,7 +30,7 @@
             /* padding: 20px; */
             /* border: 1px solid #6c757d; */
             border-radius: 8px;
-            background-color: #222223;
+            background-color: #ffffff;
             background-size: cover;
             background-position: center;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
@@ -44,8 +44,8 @@
         .login-container h2 {
             text-align: center;
             margin-bottom: 20px;
-            color: #f8f9fa;
-            text-shadow: 2px 2px 2px rgba(0,0,0,0.5);
+            color: #2da1ff;
+            text-shadow: 2px 2px 2px rgba(194, 221, 255, 0.5);
         }
         .login-form .form-group {
             margin-bottom: 20px;
@@ -68,17 +68,17 @@
             width: 100%;
             height: 45px;
             animation: slideInLeft 0.5s ease;
-            background-color: #28a745;
-            border-color: #28a745;
+            background-color: #2da1ff;
+            border-color: #2da1ff;
         }
         .login-form .btn-primary:hover {
-            background-color: #218838;
-            border-color: #1e7e34;
+            background-color: #87c9ff;
+            border-color: #87c9ff;
         }
         .register-link {
             text-align: center;
             margin-top: 20px;
-            color: #f8f9fa;
+            color: #222223;
         }
         .register-link a {
             color: #007bff;
@@ -105,9 +105,9 @@
     </style>
   
     <!-- Jumbotron -->
-    <div class="container py-4" style="margin-top: 20%;">
+    <div class="container py-4" style="margin-top: 50%;">
       <div class="row g-0 align-items-center">
-        <div class="col-lg-6 mb-5 mb-lg-0">
+        <div class="col-lg-12 mb-10 mb-lg-0">
           <div class="card cascading-right bg-body-tertiary login-container" style="
               backdrop-filter: blur(30px);
               ">
@@ -131,11 +131,11 @@
             </div>
           </div>
         </div>
-  
+{{--   
         <div class="col-lg-6 mb-5 mb-lg-0">
           <img src="/image/soldier5.jpg" class="w-100 rounded-4 shadow-4"
             alt="" />
-        </div>
+        </div> --}}
       </div>
     </div>
     <!-- Jumbotron -->
@@ -153,6 +153,18 @@
                     icon: 'error',
                     title: '{{ session('error') }}',
                     // text: '{{ session('error') }}',
+                });
+            @endif
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // ตรวจสอบว่า session มีการตั้งค่าหรือไม่
+            @if (session('status'))
+                Swal.fire({
+                    icon: '{{ session('status') }}',
+                    title: 'สำเร็จ',
+                    text: "{{ session('message') }}",
+                    confirmButtonText: 'ตกลง'
                 });
             @endif
         });

@@ -17,33 +17,10 @@ class ItemController extends Controller
         return view('/admin/item', $data);
     }
 
-    public function search(Request $request)
-    {
-
-        $data['item'] = DB::table('firearms')
-            ->leftJoin('types', 'firearms.type', '=', 'types.id')
-            ->when($request->input('search'), function ($query, $search) {
-                return $query->where(function($q) use ($search) {
-                    $q->where('firearms.name', 'like', '%' . $search . '%')
-                    ->orWhere('firearms.code', 'like', '%' . $search . '%');
-                });
-            })
-            ->when($request->input('type'), function ($query, $type) {
-                return $query->where('types.id', $type);
-            })
-            ->whereNull('firearms.deleted_at')
-            ->select('firearms.*', 'types.name as type_name') // เลือกคอลัมน์ที่ต้องการ
-            ->get();
-
-        return response()->json($data);
-    }
-
     // public function search(Request $request)
     // {
-    //     $perPage = $request->input('perPage', 10); // Number of items per page
-    //     $currentPage = $request->input('page', 1); // Current page
 
-    //     $query = DB::table('firearms')
+    //     $data['item'] = DB::table('firearms')
     //         ->leftJoin('types', 'firearms.type', '=', 'types.id')
     //         ->when($request->input('search'), function ($query, $search) {
     //             return $query->where(function($q) use ($search) {
@@ -55,12 +32,37 @@ class ItemController extends Controller
     //             return $query->where('types.id', $type);
     //         })
     //         ->whereNull('firearms.deleted_at')
-    //         ->select('firearms.*', 'types.name as type_name') // Select desired columns
-    //         ->paginate($perPage, ['*'], 'page', $currentPage); // Add pagination
+    //         ->select('firearms.*', 'types.name as type_name') // เลือกคอลัมน์ที่ต้องการ
+    //         ->get();
 
-    //     return response()->json($query);
+    //     return response()->json($data);
     // }
 
+    public function search(Request $request)
+    {
+
+        $query = DB::table('firearms')
+            ->leftJoin('types', 'firearms.type', '=', 'types.id')
+            ->when($request->input('search'), function ($query, $search) {
+                return $query->where(function($q) use ($search) {
+                    $q->where('firearms.name', 'like', '%' . $search . '%')
+                      ->orWhere('firearms.code', 'like', '%' . $search . '%');
+                });
+            })
+            ->when($request->input('type'), function ($query, $type) {
+                return $query->where('types.id', $type);
+            })
+            ->whereNull('firearms.deleted_at')
+            ->select('firearms.*', 'types.name as type_name');
+            // ->get();
+
+        $data['item'] = $query->paginate($request->input('row_num')); // Use paginate instead of get()
+
+        // dd($query);
+
+        return response()->json($data);
+    }
+    
     public function edit(Request $request)
     {
         $itemId =  $request->item_id;
@@ -75,19 +77,30 @@ class ItemController extends Controller
 
     public function save(Request $request)
     {
-        $itemId = $request->input('itemId');
-        $name = $request->input('name');
-        $code = $request->input('code');
-        $stock = $request->input('stock');
-        $type = $request->input('type');
+
+        if ($request->hasFile('image')) {
+            // $imagePath = '/' . $request->file('image')->store('/image/item', 'public');
+            $fileName = time() . '.' . $request->file('image')->getClientOriginalExtension();
+
+            // กำหนดเส้นทางสำหรับการบันทึกไฟล์ใน app/public/image/item
+            $destinationPath = public_path('image/item');
+
+            // ย้ายไฟล์ไปยังเส้นทางที่กำหนด
+            $request->file('image')->move($destinationPath, $fileName);
+
+            // กำหนดเส้นทางของภาพที่บันทึกไว้ในฐานข้อมูล
+            $imagePath = '/image/item/' . $fileName;
+        }
+
 
         DB::table('firearms')
-            ->where('id', $itemId)
+            ->where('id', $request->itemId)
             ->update([
-                'name' => $name,
-                'code' => $code,
-                'stock' => $stock,
-                'type' => $type,
+                'name' => $request->name,
+                // 'code' => $request->code,
+                'stock' => $request->stock,
+                'type' => $request->type,
+                'images' => $imagePath,
                 'updated_at' => now(),
             ]);
 
@@ -96,26 +109,36 @@ class ItemController extends Controller
 
     public function addItem(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:255',
-            'stock' => 'required|integer',
-            'type' => 'required|integer',
-            // 'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
+     
 
         // if ($request->hasFile('image')) {
         //     $imagePath = $request->file('image')->store('/image/item', 'public');
         // } else {
         //     return response()->json(['error' => 'No image file found.'], 400);
         // }
+        // dd($request->all());
+        // $imagePath = null;
+        if ($request->hasFile('image')) {
+            // $imagePath = '/' . $request->file('image')->store('/image/item', 'public');
+            $fileName = time() . '.' . $request->file('image')->getClientOriginalExtension();
+
+            // กำหนดเส้นทางสำหรับการบันทึกไฟล์ใน app/public/image/item
+            $destinationPath = public_path('image/item');
+
+            // ย้ายไฟล์ไปยังเส้นทางที่กำหนด
+            $request->file('image')->move($destinationPath, $fileName);
+
+            // กำหนดเส้นทางของภาพที่บันทึกไว้ในฐานข้อมูล
+            $imagePath = '/image/item/' . $fileName;
+        }
         
+        // dd($imagePath);
         DB::table('firearms')->insert([
             'name' => $request->name,
-            'code' => $request->code,
+            // 'code' => $request->code,
             'stock' => $request->stock,
             'type' => $request->type,
-            // 'images' => $imagePath,
+            'images' => $imagePath,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
