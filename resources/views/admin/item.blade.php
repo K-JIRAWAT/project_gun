@@ -383,7 +383,7 @@
                         success: function(response) {
                             Swal.fire({
                                 icon: 'success',
-                                title: 'ลบเรียบร้อยแล้ว',
+                                title: 'ลบข้อมูลเรียบร้อยแล้ว',
                                 showConfirmButton: false,
                                 timer: 1500
                             });

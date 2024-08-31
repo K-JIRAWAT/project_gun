@@ -14,9 +14,9 @@ class RolesSeeder extends Seeder
     public function run(): void
     {
         $item =[
-            ['name' => 'SuperAdmin', 'created_at' => now()],
-            ['name' => 'เจ้าหน้าที่ตรวจการ', 'created_at' => now()],
-            ['name' => 'เจ้าหน้าที่', 'created_at' => now()],
+            ['name' => 'เจ้าหน้าที่สรรพาวุธ', 'created_at' => now()],
+            ['name' => 'ผู้บังคับบัญชา', 'created_at' => now()],
+            ['name' => 'ข้าราชการพัน.อย.', 'created_at' => now()],
         ];
         DB::table('roles')->insert($item);
     }

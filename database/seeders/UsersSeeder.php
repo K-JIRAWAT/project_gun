@@ -17,13 +17,13 @@ class UsersSeeder extends Seeder
         $item =[
             [
                 'role_id' => 1,
-                'firstname' => 'Jirawat',
-                'lastname' => 'Kaewsamran',
+                'firstname' => 'Phongthep',
+                'lastname' => 'Kanoksing',
                 'username' => 'admin',
                 'images' => null,
                 'sector' => 1,
                 'status' => 1,
-                'email' => 'jirawatsbtc7@gmail.com',
+                'email' => 'Phongthep17@gmail.com',
                 'email_verified_at' => now(),
                 'password' => Hash::make('admin'),
                 'created_by' => 'system',
