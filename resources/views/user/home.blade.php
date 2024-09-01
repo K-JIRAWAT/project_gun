@@ -281,6 +281,31 @@
                 });
             });
 
+             // ตรวจสอบว่ามีค่าที่ต้องกรอกหรือไม่
+             if (!borrowDate) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณากรอกวันที่ยืม',
+                });
+                return; // หยุดการทำงานถ้ายังไม่ได้กรอกข้อมูล
+            }
+
+            if (!returnDate) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณากรอกวันที่คืน',
+                });
+                return;
+            }
+
+            if (!remarks) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณากรอกหมายเหตุ',
+                });
+                return;
+            }
+
             // ตรวจสอบว่า selectedItems มีค่าหรือไม่
             if (selectedItems.length === 0) {
                 Swal.fire({
