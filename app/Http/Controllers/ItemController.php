@@ -90,21 +90,27 @@ class ItemController extends Controller
 
             // กำหนดเส้นทางของภาพที่บันทึกไว้ในฐานข้อมูล
             $imagePath = '/image/item/' . $fileName;
-        }
 
-
-        DB::table('firearms')
+            DB::table('firearms')
+                ->where('id', $request->itemId)
+                ->update([
+                    'name' => $request->name,
+                    'stock' => $request->stock,
+                    'type' => $request->type,
+                    'images' => $imagePath,
+                    'updated_at' => now(),
+                ]);
+        }else{
+            DB::table('firearms')
             ->where('id', $request->itemId)
             ->update([
                 'name' => $request->name,
-                // 'code' => $request->code,
                 'stock' => $request->stock,
                 'type' => $request->type,
-                'images' => $imagePath,
                 'updated_at' => now(),
             ]);
-
-            return response()->json(200);
+        }
+        return response()->json(200);
     }
 
     public function addItem(Request $request)
@@ -130,19 +136,23 @@ class ItemController extends Controller
 
             // กำหนดเส้นทางของภาพที่บันทึกไว้ในฐานข้อมูล
             $imagePath = '/image/item/' . $fileName;
+            DB::table('firearms')->insert([
+                'name' => $request->name,
+                'stock' => $request->stock,
+                'type' => $request->type,
+                'images' => $imagePath,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }else{
+            DB::table('firearms')->insert([
+                'name' => $request->name,
+                'stock' => $request->stock,
+                'type' => $request->type,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
-        
-        // dd($imagePath);
-        DB::table('firearms')->insert([
-            'name' => $request->name,
-            // 'code' => $request->code,
-            'stock' => $request->stock,
-            'type' => $request->type,
-            'images' => $imagePath,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
         return response()->json(['success' => true]);
     }
 
