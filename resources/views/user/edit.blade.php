@@ -486,6 +486,16 @@
                 });
             });
 
+            // ตรวจสอบว่า selectedItems มีค่าหรือไม่
+            if (selectedItems.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่มีรายการที่เลือก',
+                    text: 'กรุณาเลือกอุปกรณ์หรือรายการที่ต้องการเบิกก่อน',
+                });
+                return false; 
+            }
+
             $.ajax({
                 url: '{{ route("edit.save") }}',
                 type: 'POST',
