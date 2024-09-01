@@ -279,7 +279,6 @@
     </form>
     
     <script>
-       
 
         var userRoleId = @json(Auth::user()->role_id);
         var selectedItems = [];

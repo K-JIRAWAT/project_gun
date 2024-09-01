@@ -176,6 +176,17 @@ class DashboardController extends Controller
 
     public function list_reject(Request $request)
     {
+        // dd($request->all());
+        $data['item'] = DB::table('borrow')
+            ->where('request_no', $request->request_no)
+            ->get();
+
+        foreach ($data['item'] as $item) {
+            DB::table('firearms')
+                ->where('id', $item->item_id)
+                ->increment('stock', $item->borrow_num);
+        }
+
         $data_log = [
             'request_no' => $request->request_no,
             'status' => 4,

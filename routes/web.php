@@ -81,15 +81,6 @@ Route::get('/user/cancel', [HomeController::class, 'cancel'])->name('edit.cancel
 
 
 
-
-
-
-
-
-
-
-
-
 Route::post('/logout', function () {
     Auth::logout();
     return redirect('/login');
